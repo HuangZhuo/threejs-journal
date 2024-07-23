@@ -34,7 +34,6 @@ earthNightTexture.colorSpace = THREE.SRGBColorSpace
 earthNightTexture.anisotropy = 8
 
 const earthSpecularCloudsTexture = textureLoader.load('./earth/specularClouds.jpg')
-earthSpecularCloudsTexture.colorSpace = THREE.SRGBColorSpace
 earthSpecularCloudsTexture.anisotropy = 8
 
 // Mesh

@@ -23,6 +23,14 @@ void main()
     vec3 nightColor = texture(uNightTexture, vUv).rgb;
     color = mix(nightColor, dayColor, dayMix);
 
+    // specular & clouds
+    vec2 specularCloudsColor = texture(uSpecularCloudsTexture,vUv).rg;
+    // color = vec3(specularCloudsColor, 0);
+    float cloudsMix = smoothstep(0.5, 1.0, specularCloudsColor.g); // 通过 smoothstep 获得更少的云
+    cloudsMix *= dayMix; // 夜晚不需要云，挡住了灯光（trick）
+
+    color = mix(color, vec3(1.0), cloudsMix);
+
     // Final color
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
