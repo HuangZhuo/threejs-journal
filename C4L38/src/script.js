@@ -15,6 +15,8 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+const axesHelper = new THREE.AxesHelper(5);
+scene.add(axesHelper);
 
 // Loaders
 const textureLoader = new THREE.TextureLoader()
@@ -25,10 +27,15 @@ const textureLoader = new THREE.TextureLoader()
 // Textures
 const earthDayTexture = textureLoader.load('./earth/day.jpg')
 earthDayTexture.colorSpace = THREE.SRGBColorSpace
+earthDayTexture.anisotropy = 8
+
 const earthNightTexture = textureLoader.load('./earth/night.jpg')
 earthNightTexture.colorSpace = THREE.SRGBColorSpace
+earthNightTexture.anisotropy = 8
+
 const earthSpecularCloudsTexture = textureLoader.load('./earth/specularClouds.jpg')
 earthSpecularCloudsTexture.colorSpace = THREE.SRGBColorSpace
+earthSpecularCloudsTexture.anisotropy = 8
 
 // Mesh
 const earthGeometry = new THREE.SphereGeometry(2, 64, 64)
@@ -40,12 +47,47 @@ const earthMaterial = new THREE.ShaderMaterial({
         // uniforms - texture
         uDayTexture: new THREE.Uniform(earthDayTexture),
         uNightTexture: new THREE.Uniform(earthNightTexture),
-        uSpecularCloudsTexture: new THREE.Uniform(earthSpecularCloudsTexture)
+        uSpecularCloudsTexture: new THREE.Uniform(earthSpecularCloudsTexture),
+        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1))
     }
 })
 const earth = new THREE.Mesh(earthGeometry, earthMaterial)
 scene.add(earth)
 
+// Sun
+const sunSpherical = new THREE.Spherical(1, Math.PI / 2, 0) // 球面坐标
+const sunDirecion = new THREE.Vector3()
+
+const debugSun = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(0.1, 2), // 二十面体，的基础上添加更多三角形，用于高效的球体
+    new THREE.MeshBasicMaterial({ wireframe: false })
+)
+scene.add(debugSun)
+
+const updateSun = () => {
+    // sunSpherical.theta += 0.001
+    // sunSpherical.makeSafe()
+    sunDirecion.setFromSpherical(sunSpherical)
+    debugSun.position
+        .copy(sunDirecion)
+        .multiplyScalar(5)
+    // requestAnimationFrame(updateSun)
+
+    earth.material.uniforms.uSunDirection.value.copy(sunDirecion)
+}
+
+updateSun()
+
+// GUI - tweaks
+gui.add(sunSpherical, 'phi')
+    .min(0)
+    .max(Math.PI)
+    .onChange(updateSun)
+
+gui.add(sunSpherical, 'theta')
+    .min(-Math.PI)
+    .max(Math.PI)
+    .onChange(updateSun)
 
 /**
  * Sizes
