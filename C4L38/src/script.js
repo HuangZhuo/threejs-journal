@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import GUI from 'lil-gui'
 import earthVertexShader from './shaders/earth/vertex.glsl'
 import earthFragmentShader from './shaders/earth/fragment.glsl'
+import atmosphereVertexShader from './shaders/atmosphere/vertex.glsl'
+import atmosphereFragmentShader from './shaders/atmosphere/fragment.glsl'
 
 /**
  * Base
@@ -33,11 +35,13 @@ earthParameters.atmosphereTwilightColor = '#ff6600'
 gui.addColor(earthParameters, 'atmosphereDayColor')
     .onChange(() => {
         earth.material.uniforms.uAtmosphereDayColor.value.set(earthParameters.atmosphereDayColor)
+        atmosphere.material.uniforms.uAtmosphereDayColor.value.set(earthParameters.atmosphereDayColor)
     })
 
 gui.addColor(earthParameters, 'atmosphereTwilightColor')
     .onChange(() => {
         earth.material.uniforms.uAtmosphereTwilightColor.value.set(earthParameters.atmosphereTwilightColor)
+        atmosphere.material.uniforms.uAtmosphereTwilightColor.value.set(earthParameters.atmosphereTwilightColor)
     })
 
 // Textures
@@ -71,6 +75,21 @@ const earthMaterial = new THREE.ShaderMaterial({
 const earth = new THREE.Mesh(earthGeometry, earthMaterial)
 scene.add(earth)
 
+const atmosphereMaterial = new THREE.ShaderMaterial({
+    vertexShader: atmosphereVertexShader,
+    fragmentShader: atmosphereFragmentShader,
+    uniforms: {
+        uSunDirection: new THREE.Uniform(new THREE.Vector3(0, 0, 1)),
+        uAtmosphereDayColor: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereDayColor)),
+        uAtmosphereTwilightColor: new THREE.Uniform(new THREE.Color(earthParameters.atmosphereTwilightColor))
+    },
+    side: THREE.BackSide,
+    transparent: true,
+})
+const atmosphere = new THREE.Mesh(earthGeometry, atmosphereMaterial)
+atmosphere.scale.set(1.04, 1.04, 1.04)
+scene.add(atmosphere)
+
 // Sun
 const sunSpherical = new THREE.Spherical(1, Math.PI / 2, 0) // 球面坐标
 const sunDirecion = new THREE.Vector3()
@@ -91,6 +110,7 @@ const updateSun = () => {
     // requestAnimationFrame(updateSun)
 
     earth.material.uniforms.uSunDirection.value.copy(sunDirecion)
+    atmosphere.material.uniforms.uSunDirection.value.copy(sunDirecion)
 }
 
 updateSun()
