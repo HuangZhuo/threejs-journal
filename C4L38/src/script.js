@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js'
 import GUI from 'lil-gui'
 import earthVertexShader from './shaders/earth/vertex.glsl'
 import earthFragmentShader from './shaders/earth/fragment.glsl'
@@ -17,8 +18,8 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
-const axesHelper = new THREE.AxesHelper(5);
-scene.add(axesHelper);
+// const axesHelper = new THREE.AxesHelper(5);
+// scene.add(axesHelper);
 
 // Loaders
 const textureLoader = new THREE.TextureLoader()
@@ -47,7 +48,7 @@ gui.addColor(earthParameters, 'atmosphereTwilightColor')
 // Textures
 const earthDayTexture = textureLoader.load('./earth/day.jpg')
 earthDayTexture.colorSpace = THREE.SRGBColorSpace
-earthDayTexture.anisotropy = 8
+earthDayTexture.anisotropy = 8 // 避免球体两极地区采样模糊
 
 const earthNightTexture = textureLoader.load('./earth/night.jpg')
 earthNightTexture.colorSpace = THREE.SRGBColorSpace
@@ -100,14 +101,32 @@ const debugSun = new THREE.Mesh(
 )
 scene.add(debugSun)
 
+// Light
+/**
+ * https://threejs.org/examples/#webgl_lensflares
+ * https://github.com/mrdoob/three.js/blob/dev/examples/webgl_lensflares.html
+ */
+const light = new THREE.PointLight(0xffffff, 1.5);
+scene.add(light);
+const textureFlare0 = textureLoader.load('./lenses/lensflare0.png');
+const textureFlare1 = textureLoader.load('./lenses/lensflare1.png');
+const lensflare = new Lensflare();
+lensflare.addElement(new LensflareElement(textureFlare0, 200, 0, light.color));
+lensflare.addElement(new LensflareElement(textureFlare1, 60, 0.6));
+lensflare.addElement(new LensflareElement(textureFlare1, 70, 0.7));
+lensflare.addElement(new LensflareElement(textureFlare1, 120, 0.9));
+lensflare.addElement(new LensflareElement(textureFlare1, 70, 1));
+light.add(lensflare);
+
 const updateSun = () => {
-    // sunSpherical.theta += 0.001
-    // sunSpherical.makeSafe()
     sunDirecion.setFromSpherical(sunSpherical)
     debugSun.position
         .copy(sunDirecion)
         .multiplyScalar(5)
-    // requestAnimationFrame(updateSun)
+
+    light.position
+        .copy(sunDirecion)
+        .multiplyScalar(5)
 
     earth.material.uniforms.uSunDirection.value.copy(sunDirecion)
     atmosphere.material.uniforms.uSunDirection.value.copy(sunDirecion)
@@ -169,7 +188,8 @@ controls.enableDamping = true
  */
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
-    antialias: true
+    antialias: true,
+    alpha: true, // for lensflare
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(sizes.pixelRatio)
