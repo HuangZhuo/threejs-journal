@@ -24,6 +24,33 @@ const scene = new THREE.Scene()
 // Loaders
 const textureLoader = new THREE.TextureLoader()
 
+
+/**
+ * Stars
+ * https://threejs.org/examples/#webgl_camera
+ */
+const geometry = new THREE.BufferGeometry();
+const starSpherical = new THREE.Spherical(0, 0, 0);
+const starPos = new THREE.Vector3();
+const vertices = [];
+
+for (let i = 0; i < 10000; i++) {
+    // 在 100～200 之间随机分布点
+    starSpherical.radius = THREE.MathUtils.randInt(200, 400)
+    // starSpherical.phi = THREE.MathUtils.randFloat(0, Math.PI);
+    starSpherical.phi = Math.acos(THREE.MathUtils.randFloat(-1, 1));
+    starSpherical.theta = THREE.MathUtils.randFloat(-Math.PI, Math.PI);
+    starPos.setFromSpherical(starSpherical)
+    vertices.push(starPos.x);
+    vertices.push(starPos.y);
+    vertices.push(starPos.z);
+}
+
+geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+const particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x888888 }));
+scene.add(particles);
+
 /**
  * Earth
  */
@@ -173,7 +200,7 @@ window.addEventListener('resize', () => {
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
 camera.position.x = 12
 camera.position.y = 5
 camera.position.z = 4
